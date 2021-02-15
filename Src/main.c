@@ -127,9 +127,42 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM2) {
 		communicationUART_u16++;
+	}
+}
+
+void RAKE_UART_Callback(UART_HandleTypeDef *huart_instance, USART_TypeDef *husart, UART_HandleTypeDef *huart, uart *uart) {
+		if(huart_instance->Instance == husart){
+		flag.LED.UART_bit = 1;
+		//----------------------------------------
+		//Reset RX Buffer Code
+		//----------------------------------------
+		if(flag.UART.rxIndex_bool == 0) {
+			for(uint8_t index; index < 30; index++) {
+				uart->rxBuffer[index] = 0;
+			}
+		}
+		
+		if(uart->rxData[0] == 'S') {
+			flag.UART.rxIndex_bool = 0;
+		}
+		//----------------------------------------
+		//Write Data to Buffer Code
+		//----------------------------------------
+		if(uart->rxData[0] != 'F'){
+			uart->rxBuffer[flag.UART.rxIndex_bool++] = uart->rxData[0];
+		} else {
+			flag.UART.rxIndex_bool = 0;
+			flag.UART.rxComplete_bool = 1;
+		}
+		//----------------------------------------
+		HAL_UART_Receive_IT(huart, uart->rxData, 1);
+		//----------------------------------------
+	} else {
+		flag.LED.UART_bit = 0;
 	}
 }
 
@@ -141,38 +174,103 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 //------UART Comm. Code
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if(huart->Instance == USART1){
-		flag.LED.UART_bit = 1;
-		//----------------------------------------
-		//Reset RX Buffer Code
-		//----------------------------------------
-		if(flag.UART.rxIndex_bool == 0) {
-			for(uint8_t index; index < 30; index++) {
-				pc_uart.rxBuffer[index] = 0;
-			}
-		}
-		
-		if(pc_uart.rxData[0] == 'S') {
-			flag.UART.rxIndex_bool = 0;
-		}
-		//----------------------------------------
-		//Write Data to Buffer Code
-		//----------------------------------------
-		if(pc_uart.rxData[0] != 'F'){
-			pc_uart.rxBuffer[flag.UART.rxIndex_bool++] = pc_uart.rxData[0];
-		} else {
-			flag.UART.rxIndex_bool = 0;
-			flag.UART.rxComplete_bool = 1;
-		}
-		//----------------------------------------
-		HAL_UART_Receive_IT(&huart1, pc_uart.rxData, 1);
-		//----------------------------------------
-	} else {
-		flag.LED.UART_bit = 0;
-	}
+//	//-----------------PC UART DATA---------------------------
+//	if(huart->Instance == USART1){
+//		flag.LED.UART_bit = 1;
+//		//----------------------------------------
+//		//Reset RX Buffer Code
+//		//----------------------------------------
+//		if(flag.UART.rxIndex_bool == 0) {
+//			for(uint8_t index; index < 30; index++) {
+//				pc_uart.rxBuffer[index] = 0;
+//			}
+//		}
+//		
+//		if(pc_uart.rxData[0] == 'S') {
+//			flag.UART.rxIndex_bool = 0;
+//		}
+//		//----------------------------------------
+//		//Write Data to Buffer Code
+//		//----------------------------------------
+//		if(pc_uart.rxData[0] != 'F'){
+//			pc_uart.rxBuffer[flag.UART.rxIndex_bool++] = pc_uart.rxData[0];
+//		} else {
+//			flag.UART.rxIndex_bool = 0;
+//			flag.UART.rxComplete_bool = 1;
+//		}
+//		//----------------------------------------
+//		HAL_UART_Receive_IT(&huart1, pc_uart.rxData, 1);
+//		//----------------------------------------
+//	} else {
+//		flag.LED.UART_bit = 0;
+//	}
+//	//-----------------MOTOR1 UART DATA---------------------------
+//	if(huart->Instance == USART2) {
+//		flag.LED.UART_bit = 1;
+//		//----------------------------------------
+//		//Reset RX Buffer Code
+//		//----------------------------------------
+//		if(flag.UART.rxIndex_bool == 0) {
+//			for(uint8_t index; index < 30; index++) {
+//				motor1_uart.rxBuffer[index] = 0;
+//			}
+//		}
+//		
+//		if(motor1_uart.rxData[0] == 'S') {
+//			flag.UART.rxIndex_bool = 0;
+//		}
+//		//----------------------------------------
+//		//Write Data to Buffer Code
+//		//----------------------------------------
+//		if(motor1_uart.rxData[0] != 'F'){
+//			motor1_uart.rxBuffer[flag.UART.rxIndex_bool++] = motor1_uart.rxData[0];
+//		} else {
+//			flag.UART.rxIndex_bool = 0;
+//			flag.UART.rxComplete_bool = 1;
+//		}
+//		//----------------------------------------
+//		HAL_UART_Receive_IT(&huart2, motor1_uart.rxData, 1);
+//		//----------------------------------------
+//	}
+//	//-----------------MOTOR1 UART DATA---------------------------
+//	if(huart->Instance == USART3) {
+//		flag.LED.UART_bit = 1;
+//		//----------------------------------------
+//		//Reset RX Buffer Code
+//		//----------------------------------------
+//		if(flag.UART.rxIndex_bool == 0) {
+//			for(uint8_t index; index < 30; index++) {
+//				motor2_uart.rxBuffer[index] = 0;
+//			}
+//		}
+//		
+//		if(motor2_uart.rxData[0] == 'S') {
+//			flag.UART.rxIndex_bool = 0;
+//		}
+//		//----------------------------------------
+//		//Write Data to Buffer Code
+//		//----------------------------------------
+//		if(motor2_uart.rxData[0] != 'F'){
+//			motor2_uart.rxBuffer[flag.UART.rxIndex_bool++] = motor2_uart.rxData[0];
+//		} else {
+//			flag.UART.rxIndex_bool = 0;
+//			flag.UART.rxComplete_bool = 1;
+//		}
+//		//----------------------------------------
+//		HAL_UART_Receive_IT(&huart3, motor2_uart.rxData, 1);
+//		//----------------------------------------
+//	}
+	RAKE_UART_Callback(huart,USART1,&huart1,&pc_uart);
+	RAKE_UART_Callback(huart,USART2,&huart2,&motor1_uart);
+	RAKE_UART_Callback(huart,USART3,&huart3,&motor2_uart);
+	
+
 }
 
-void rx_motor_speed() {
+
+
+
+void RAKE_Rx_Motor_Speed(void) {
 	if(flag.UART.rxComplete_bool == 1) {
 		if(pc_uart.rxBuffer[10] == 'C') {
 			//----------------------------------------
@@ -195,9 +293,37 @@ void rx_motor_speed() {
 			flag.UART.rxComplete_bool = 0;
 		}
 	}
+//		if(motor1_uart.rxBuffer[5] == 'C') {
+//			//----------------------------------------
+//			//Convert Text Data to Integer Code
+//			//----------------------------------------
+//			motor1.RPM_u32 	= 
+//															(motor1_uart.rxBuffer[2] - '0') * 100 +
+//															(motor1_uart.rxBuffer[3] - '0') * 10 +
+//															(motor1_uart.rxBuffer[4] - '0');
+//			motor1.direction = 
+//															(motor1_uart.rxBuffer[1] - '0');
+
+//			flag.UART.rxComplete_bool = 0;
+//		}
+//		if(motor2_uart.rxBuffer[5] == 'C') {
+//			//----------------------------------------
+//			//Convert Text Data to Integer Code
+//			//----------------------------------------
+//			motor2.RPM_u32 	= 
+//															(motor2_uart.rxBuffer[2] - '0') * 100 +
+//															(motor2_uart.rxBuffer[3] - '0') * 10 +
+//															(motor2_uart.rxBuffer[4] - '0');
+//			motor2.direction = 
+//															(motor1_uart.rxBuffer[1] - '0');
+
+//			flag.UART.rxComplete_bool = 0;
+//		}
+		
+	
 }
 
-void tx_motor_speed() {
+void RAKE_Tx_Motor_Speed(void) {
 	if(communicationUART_u16 > TX_TIME){
 		/*
 			Data Type --> "SavvvCF"
@@ -269,6 +395,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+	
 	HAL_UART_Receive_IT(&huart1, pc_uart.rxData, 1);
 	HAL_UART_Receive_IT(&huart2, motor1_uart.rxData, 1);
 	HAL_UART_Receive_IT(&huart3, motor2_uart.rxData, 1);
@@ -282,8 +409,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-		rx_motor_speed();
-		tx_motor_speed();
+		
+		RAKE_Rx_Motor_Speed();
+		RAKE_Tx_Motor_Speed();
+		
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
