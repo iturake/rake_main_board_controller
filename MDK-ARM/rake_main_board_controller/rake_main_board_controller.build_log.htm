@@ -28,17 +28,17 @@ Project File Date:  02/16/2021
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\Kail\ARM\ARMCC\Bin'
 Build target 'rake_main_board_controller'
 compiling main.c...
-../Src/main.c(230): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
+../Src/main.c(226): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
   		motor1_uart.txBufferLen = sprintf(motor1_uart.txBuffer, "S%d%d%d%dCF",
-../Src/main.c(239): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
+../Src/main.c(235): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
   		motor2_uart.txBufferLen = sprintf(motor2_uart.txBuffer, "S%d%d%d%dCF",
-../Src/main.c(261): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
+../Src/main.c(241): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
   		strcat(motor1_uart.rxBuffer, motor2_uart.rxBuffer);
-../Src/main.c(261): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "const char *restrict"
+../Src/main.c(241): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "const char *restrict"
   		strcat(motor1_uart.rxBuffer, motor2_uart.rxBuffer);
-../Src/main.c(267): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
+../Src/main.c(247): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "char *restrict"
       strcpy(&motor1_uart.rxBuffer[10], &motor1_uart.rxBuffer[10 + 1]);
-../Src/main.c(267): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "const char *restrict"
+../Src/main.c(247): warning:  #167-D: argument of type "unsigned char *" is incompatible with parameter of type "const char *restrict"
       strcpy(&motor1_uart.rxBuffer[10], &motor1_uart.rxBuffer[10 + 1]);
 ../Src/main.c: 6 warnings, 0 errors
 linking...
@@ -67,7 +67,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.3.0
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>

@@ -124,19 +124,18 @@ static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 
-//Timer interrupt callback functions
+//Timer interrupti geldigi zaman communicationUART_u16 degeri arttirildi 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM2) {
 		communicationUART_u16++;
 	}
 }
 
-//UART communication function
+//UART dan veri geldiginde verinin alinmasi saglandi
 void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart) {
 		flag.LED.UART_bit = 1;
-		//----------------------------------------
-		//Reset RX Buffer Code
-		//----------------------------------------
+	
+		//RX Buffer sifirlandi
 		if(flag.UART.rxIndex_bool == 0) {
 			for(uint8_t index; index < 30; index++) {
 				uart->rxBuffer[index] = 0;
@@ -145,16 +144,15 @@ void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart) {
 		if(uart->rxData[0] == 'S') {
 			flag.UART.rxIndex_bool = 0;
 		}
-		//----------------------------------------
-		//Write Data to Buffer Code
-		//----------------------------------------
+
+		//RX Buffer a veriler yazildi
 		if(uart->rxData[0] != 'F'){
 			uart->rxBuffer[flag.UART.rxIndex_bool++] = uart->rxData[0];
 		} else {
 			flag.UART.rxIndex_bool = 0;
 			flag.UART.rxComplete_bool = 1;
 		}
-		//----------------------------------------
+
 		HAL_UART_Receive_IT(huart, uart->rxData, 1);
 }
 
@@ -163,7 +161,7 @@ void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart) {
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-//UART interrupt callback function
+//UART interrupti geldigi zaman gelen veriye göre pc ve STM32F103 lerden veri alimi saglandi
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if(huart->Instance == UART4){
 		RAKE_UART_Callback(&pc_uart, &huart4);
@@ -182,13 +180,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	}
 }
 
-
+//UART dan gelen veriyi kontrol edip motorun RPM ve direction degerleri belirlendi
 void RAKE_Rx_Motor_Speed(void) {
 	if(flag.UART.rxComplete_bool == 1) {
 		if(pc_uart.rxBuffer[10] == 'C') {
-			//----------------------------------------
-			//Convert Text Data to Integer Code
-			//----------------------------------------
+
+			//String olarak alinan degerler int e cevirildi
 			motor1.RPM_u32 	= 
 															(pc_uart.rxBuffer[2] - '0') * 100 +
 															(pc_uart.rxBuffer[3] - '0') * 10 +
@@ -202,7 +199,7 @@ void RAKE_Rx_Motor_Speed(void) {
 															(pc_uart.rxBuffer[9] - '0');
 			motor2.direction = 
 															(pc_uart.rxBuffer[6] - '0');
-			//----------------------------------------
+
 			flag.UART.rxComplete_bool = 0;
 		}
 	}	
@@ -218,9 +215,8 @@ void RAKE_Tx_Motor_Speed(void) {
 			C = Control							(char)
 			F = Finish							(char)
 		*/
-		//----------------------------------------
-		//Send Data Code
-		//----------------------------------------
+
+		//RPM ve direction verileri motorlara gönderildi
 		int hun = 0, ten = 0, one = 0;
 		
 		hun = (motor1.RPM_u32 / 100);
@@ -241,24 +237,7 @@ void RAKE_Tx_Motor_Speed(void) {
 		
 		HAL_UART_Transmit_IT(&huart3, motor2_uart.txBuffer, motor2_uart.txBufferLen);
 		
-//		for(int i = 0; i < sizeof(motor1_uart.rxBuffer)-2; i++) {
-//			encoder_rxBuffer[i] = motor1_uart.rxBuffer[i];
-//		}
-//		
-//		for(int i = sizeof(motor1_uart.rxBuffer)-2; i < (sizeof(motor1_uart.rxBuffer)-2 + sizeof(motor2_uart.rxBuffer)-1); i++) {
-//			encoder_rxBuffer[i] = motor2_uart.rxBuffer[(i-(sizeof(motor1_uart.rxBuffer)-2))+1];
-//		}
-		
-		
-//		  while (motor1_uart.rxBuffer[motor1BufferLen] != '0') {
-//				++motor1BufferLen;
-//      }
-//			int j;
-//			for (j = 0; motor2_uart.rxBuffer[j] != '0'; ++j, ++motor1BufferLen) {
-//        motor1_uart.rxBuffer[motor1BufferLen-2] = motor2_uart.rxBuffer[j+1];
-//      }
-//			motor1_uart.rxBuffer[motor1BufferLen] = '0';
-		
+		//Motorlardan gelen veriler istenilen data formatina cevirildi
 		strcat(motor1_uart.rxBuffer, motor2_uart.rxBuffer);
 		motor1_uart.rxBuffer[12] = 'F';
 		for (int c = 6 - 1; c < 12 - 1; c++) {
@@ -266,6 +245,7 @@ void RAKE_Tx_Motor_Speed(void) {
 		}
 		motor1_uart.rxBuffer[5] = '-';
     strcpy(&motor1_uart.rxBuffer[10], &motor1_uart.rxBuffer[10 + 1]);
+		
 		HAL_UART_Transmit_IT(&huart4, motor1_uart.rxBuffer, sizeof(motor1_uart.rxBuffer));
 		
 		communicationUART_u16 = 0;
@@ -310,10 +290,12 @@ int main(void)
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 	
+	//Baslangicta UART dan veri alma islemi gerceklestirildi
 	HAL_UART_Receive_IT(&huart4, pc_uart.rxData, 1);
 	HAL_UART_Receive_IT(&huart2, motor1_uart.rxData, 1);
 	HAL_UART_Receive_IT(&huart3, motor2_uart.rxData, 1);
 	
+	//Baslangicta TIM_Interrupt baslatildi
 	HAL_TIM_Base_Start_IT(&htim2);
 	
   /* USER CODE END 2 */
@@ -325,6 +307,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		
 		RAKE_Rx_Motor_Speed();
 		RAKE_Tx_Motor_Speed();
 		
