@@ -30,3 +30,4 @@ rake_main_board_controller\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx
 rake_main_board_controller\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 rake_main_board_controller\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 rake_main_board_controller\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+rake_main_board_controller\main.o: D:\Kail\ARM\ARMCC\Bin\..\include\string.h

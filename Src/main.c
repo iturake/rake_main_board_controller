@@ -40,6 +40,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "string.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -66,7 +67,7 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 
-UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
@@ -82,9 +83,6 @@ typedef struct uartStruct {
 uart pc_uart;
 uart motor1_uart;
 uart motor2_uart;
-
-
-//------Flag Struct
 
 struct flagStruct {
 	struct {
@@ -105,8 +103,6 @@ struct flagStruct {
 
 struct flagStruct flag = {{0,0,0,0,0,0,0,0},{0,0}};
 
-//------Motor Struct
-
 typedef struct motorStruct {
 	uint32_t RPM_u32;
 	_Bool direction;
@@ -122,20 +118,21 @@ uint16_t communicationUART_u16 = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 
+//Timer interrupt callback functions
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM2) {
 		communicationUART_u16++;
 	}
 }
 
-void RAKE_UART_Callback(UART_HandleTypeDef *huart_instance, USART_TypeDef *husart, UART_HandleTypeDef *huart, uart *uart) {
-		if(huart_instance->Instance == husart){
+//UART communication function
+void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart) {
 		flag.LED.UART_bit = 1;
 		//----------------------------------------
 		//Reset RX Buffer Code
@@ -145,7 +142,6 @@ void RAKE_UART_Callback(UART_HandleTypeDef *huart_instance, USART_TypeDef *husar
 				uart->rxBuffer[index] = 0;
 			}
 		}
-		
 		if(uart->rxData[0] == 'S') {
 			flag.UART.rxIndex_bool = 0;
 		}
@@ -160,10 +156,6 @@ void RAKE_UART_Callback(UART_HandleTypeDef *huart_instance, USART_TypeDef *husar
 		}
 		//----------------------------------------
 		HAL_UART_Receive_IT(huart, uart->rxData, 1);
-		//----------------------------------------
-	} else {
-		flag.LED.UART_bit = 0;
-	}
 }
 
 /* USER CODE END PFP */
@@ -171,103 +163,24 @@ void RAKE_UART_Callback(UART_HandleTypeDef *huart_instance, USART_TypeDef *husar
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-//------UART Comm. Code
-
+//UART interrupt callback function
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-//	//-----------------PC UART DATA---------------------------
-//	if(huart->Instance == USART1){
-//		flag.LED.UART_bit = 1;
-//		//----------------------------------------
-//		//Reset RX Buffer Code
-//		//----------------------------------------
-//		if(flag.UART.rxIndex_bool == 0) {
-//			for(uint8_t index; index < 30; index++) {
-//				pc_uart.rxBuffer[index] = 0;
-//			}
-//		}
-//		
-//		if(pc_uart.rxData[0] == 'S') {
-//			flag.UART.rxIndex_bool = 0;
-//		}
-//		//----------------------------------------
-//		//Write Data to Buffer Code
-//		//----------------------------------------
-//		if(pc_uart.rxData[0] != 'F'){
-//			pc_uart.rxBuffer[flag.UART.rxIndex_bool++] = pc_uart.rxData[0];
-//		} else {
-//			flag.UART.rxIndex_bool = 0;
-//			flag.UART.rxComplete_bool = 1;
-//		}
-//		//----------------------------------------
-//		HAL_UART_Receive_IT(&huart1, pc_uart.rxData, 1);
-//		//----------------------------------------
-//	} else {
-//		flag.LED.UART_bit = 0;
-//	}
-//	//-----------------MOTOR1 UART DATA---------------------------
-//	if(huart->Instance == USART2) {
-//		flag.LED.UART_bit = 1;
-//		//----------------------------------------
-//		//Reset RX Buffer Code
-//		//----------------------------------------
-//		if(flag.UART.rxIndex_bool == 0) {
-//			for(uint8_t index; index < 30; index++) {
-//				motor1_uart.rxBuffer[index] = 0;
-//			}
-//		}
-//		
-//		if(motor1_uart.rxData[0] == 'S') {
-//			flag.UART.rxIndex_bool = 0;
-//		}
-//		//----------------------------------------
-//		//Write Data to Buffer Code
-//		//----------------------------------------
-//		if(motor1_uart.rxData[0] != 'F'){
-//			motor1_uart.rxBuffer[flag.UART.rxIndex_bool++] = motor1_uart.rxData[0];
-//		} else {
-//			flag.UART.rxIndex_bool = 0;
-//			flag.UART.rxComplete_bool = 1;
-//		}
-//		//----------------------------------------
-//		HAL_UART_Receive_IT(&huart2, motor1_uart.rxData, 1);
-//		//----------------------------------------
-//	}
-//	//-----------------MOTOR1 UART DATA---------------------------
-//	if(huart->Instance == USART3) {
-//		flag.LED.UART_bit = 1;
-//		//----------------------------------------
-//		//Reset RX Buffer Code
-//		//----------------------------------------
-//		if(flag.UART.rxIndex_bool == 0) {
-//			for(uint8_t index; index < 30; index++) {
-//				motor2_uart.rxBuffer[index] = 0;
-//			}
-//		}
-//		
-//		if(motor2_uart.rxData[0] == 'S') {
-//			flag.UART.rxIndex_bool = 0;
-//		}
-//		//----------------------------------------
-//		//Write Data to Buffer Code
-//		//----------------------------------------
-//		if(motor2_uart.rxData[0] != 'F'){
-//			motor2_uart.rxBuffer[flag.UART.rxIndex_bool++] = motor2_uart.rxData[0];
-//		} else {
-//			flag.UART.rxIndex_bool = 0;
-//			flag.UART.rxComplete_bool = 1;
-//		}
-//		//----------------------------------------
-//		HAL_UART_Receive_IT(&huart3, motor2_uart.rxData, 1);
-//		//----------------------------------------
-//	}
-	RAKE_UART_Callback(huart,USART1,&huart1,&pc_uart);
-	RAKE_UART_Callback(huart,USART2,&huart2,&motor1_uart);
-	RAKE_UART_Callback(huart,USART3,&huart3,&motor2_uart);
-	
-
+	if(huart->Instance == UART4){
+		RAKE_UART_Callback(&pc_uart, &huart4);
+	}else {
+		flag.LED.UART_bit = 0;
+	}
+	if(huart->Instance == USART2){
+		RAKE_UART_Callback(&motor1_uart, &huart2);
+	}else {
+		flag.LED.UART_bit = 0;
+	}
+	if(huart->Instance == USART3){
+		RAKE_UART_Callback(&motor2_uart, &huart3);
+	}else {
+		flag.LED.UART_bit = 0;
+	}
 }
-
-
 
 
 void RAKE_Rx_Motor_Speed(void) {
@@ -292,35 +205,7 @@ void RAKE_Rx_Motor_Speed(void) {
 			//----------------------------------------
 			flag.UART.rxComplete_bool = 0;
 		}
-	}
-//		if(motor1_uart.rxBuffer[5] == 'C') {
-//			//----------------------------------------
-//			//Convert Text Data to Integer Code
-//			//----------------------------------------
-//			motor1.RPM_u32 	= 
-//															(motor1_uart.rxBuffer[2] - '0') * 100 +
-//															(motor1_uart.rxBuffer[3] - '0') * 10 +
-//															(motor1_uart.rxBuffer[4] - '0');
-//			motor1.direction = 
-//															(motor1_uart.rxBuffer[1] - '0');
-
-//			flag.UART.rxComplete_bool = 0;
-//		}
-//		if(motor2_uart.rxBuffer[5] == 'C') {
-//			//----------------------------------------
-//			//Convert Text Data to Integer Code
-//			//----------------------------------------
-//			motor2.RPM_u32 	= 
-//															(motor2_uart.rxBuffer[2] - '0') * 100 +
-//															(motor2_uart.rxBuffer[3] - '0') * 10 +
-//															(motor2_uart.rxBuffer[4] - '0');
-//			motor2.direction = 
-//															(motor1_uart.rxBuffer[1] - '0');
-
-//			flag.UART.rxComplete_bool = 0;
-//		}
-		
-	
+	}	
 }
 
 void RAKE_Tx_Motor_Speed(void) {
@@ -356,9 +241,38 @@ void RAKE_Tx_Motor_Speed(void) {
 		
 		HAL_UART_Transmit_IT(&huart3, motor2_uart.txBuffer, motor2_uart.txBufferLen);
 		
+//		for(int i = 0; i < sizeof(motor1_uart.rxBuffer)-2; i++) {
+//			encoder_rxBuffer[i] = motor1_uart.rxBuffer[i];
+//		}
+//		
+//		for(int i = sizeof(motor1_uart.rxBuffer)-2; i < (sizeof(motor1_uart.rxBuffer)-2 + sizeof(motor2_uart.rxBuffer)-1); i++) {
+//			encoder_rxBuffer[i] = motor2_uart.rxBuffer[(i-(sizeof(motor1_uart.rxBuffer)-2))+1];
+//		}
+		
+		
+//		  while (motor1_uart.rxBuffer[motor1BufferLen] != '0') {
+//				++motor1BufferLen;
+//      }
+//			int j;
+//			for (j = 0; motor2_uart.rxBuffer[j] != '0'; ++j, ++motor1BufferLen) {
+//        motor1_uart.rxBuffer[motor1BufferLen-2] = motor2_uart.rxBuffer[j+1];
+//      }
+//			motor1_uart.rxBuffer[motor1BufferLen] = '0';
+		
+		strcat(motor1_uart.rxBuffer, motor2_uart.rxBuffer);
+		motor1_uart.rxBuffer[12] = 'F';
+		for (int c = 6 - 1; c < 12 - 1; c++) {
+			motor1_uart.rxBuffer[c] = motor1_uart.rxBuffer[c+1];
+		}
+		motor1_uart.rxBuffer[5] = '-';
+    strcpy(&motor1_uart.rxBuffer[10], &motor1_uart.rxBuffer[10 + 1]);
+		HAL_UART_Transmit_IT(&huart4, motor1_uart.rxBuffer, sizeof(motor1_uart.rxBuffer));
+		
 		communicationUART_u16 = 0;
 	}
+
 }
+
 
 /* USER CODE END 0 */
 
@@ -390,13 +304,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_TIM2_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 	
-	HAL_UART_Receive_IT(&huart1, pc_uart.rxData, 1);
+	HAL_UART_Receive_IT(&huart4, pc_uart.rxData, 1);
 	HAL_UART_Receive_IT(&huart2, motor1_uart.rxData, 1);
 	HAL_UART_Receive_IT(&huart3, motor2_uart.rxData, 1);
 	
@@ -409,11 +323,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-		
+
+    /* USER CODE BEGIN 3 */
 		RAKE_Rx_Motor_Speed();
 		RAKE_Tx_Motor_Speed();
 		
-    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -501,35 +415,35 @@ static void MX_TIM2_Init(void)
 }
 
 /**
-  * @brief USART1 Initialization Function
+  * @brief UART4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+static void MX_UART4_Init(void)
 {
 
-  /* USER CODE BEGIN USART1_Init 0 */
+  /* USER CODE BEGIN UART4_Init 0 */
 
-  /* USER CODE END USART1_Init 0 */
+  /* USER CODE END UART4_Init 0 */
 
-  /* USER CODE BEGIN USART1_Init 1 */
+  /* USER CODE BEGIN UART4_Init 1 */
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 115200;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
+  /* USER CODE BEGIN UART4_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
+  /* USER CODE END UART4_Init 2 */
 
 }
 
