@@ -82,7 +82,7 @@ uart pc_uart;
 uart motor1_uart;
 uart motor2_uart;
 
-struct flagStruct {
+typedef struct flagStruct {
 	struct {
 		_Bool motorForward_bit;
 		_Bool motorBackward_bit;
@@ -97,9 +97,13 @@ struct flagStruct {
 		uint8_t rxIndex_bool;
 		_Bool rxComplete_bool;
 	} UART;
-};
+}flag;
 
-struct flagStruct flag = {{0,0,0,0,0,0,0,0},{0,0}};
+flag pc_flag;
+flag motor1_flag;
+flag motor2_flag;
+
+//struct flagStruct flag = {{0,0,0,0,0,0,0,0},{0,0}};
 
 typedef struct motorStruct {
 	uint32_t RPM_u32;
@@ -130,9 +134,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 
 //UART dan veri geldiginde verinin alinmasi saglandi
-void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart) {
-		flag.LED.UART_bit = 1;
+void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart,flag flag) {
 	
+		flag.LED.UART_bit = 1;
+
 		//RX Buffer sifirlandi
 		if(flag.UART.rxIndex_bool == 0) {
 			for(uint8_t index; index < 30; index++) {
@@ -162,25 +167,25 @@ void RAKE_UART_Callback(uart *uart, UART_HandleTypeDef *huart) {
 //UART interrupti geldigi zaman gelen veriye göre pc ve STM32F103 lerden veri alimi saglandi
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if(huart->Instance == UART4){
-		RAKE_UART_Callback(&pc_uart, &huart4);
+		RAKE_UART_Callback(&pc_uart, &huart4, pc_flag);
 	}else {
-		flag.LED.UART_bit = 0;
+		pc_flag.LED.UART_bit = 0;
 	}
 	if(huart->Instance == USART2){
-		RAKE_UART_Callback(&motor1_uart, &huart2);
+		RAKE_UART_Callback(&motor1_uart, &huart2, motor1_flag);
 	}else {
-		flag.LED.UART_bit = 0;
+		motor1_flag.LED.UART_bit = 0;
 	}
 	if(huart->Instance == USART3){
-		RAKE_UART_Callback(&motor2_uart, &huart3);
+		RAKE_UART_Callback(&motor2_uart, &huart3, motor2_flag);
 	}else {
-		flag.LED.UART_bit = 0;
+		motor2_flag.LED.UART_bit = 0;
 	}
 }
 
 //UART dan gelen veriyi kontrol edip motorun RPM ve direction degerleri belirlendi
 void RAKE_Rx_Motor_Speed(void) {
-	if(flag.UART.rxComplete_bool == 1) {
+	if(pc_flag.UART.rxComplete_bool == 1) {
 		if(pc_uart.rxBuffer[10] == 'C') {
 
 			//String olarak alinan degerler int e cevirildi
@@ -198,7 +203,7 @@ void RAKE_Rx_Motor_Speed(void) {
 			motor2.direction = 
 															(pc_uart.rxBuffer[6] - '0');
 
-			flag.UART.rxComplete_bool = 0;
+			pc_flag.UART.rxComplete_bool = 0;
 		}
 	}	
 }
