@@ -3,9 +3,9 @@
 "rake_main_board_controller\main.o"
 "rake_main_board_controller\stm32f4xx_it.o"
 "rake_main_board_controller\stm32f4xx_hal_msp.o"
+"rake_main_board_controller\system_stm32f4xx.o"
 "rake_main_board_controller\stm32f4xx_hal_tim.o"
 "rake_main_board_controller\stm32f4xx_hal_tim_ex.o"
-"rake_main_board_controller\stm32f4xx_hal_uart.o"
 "rake_main_board_controller\stm32f4xx_hal_rcc.o"
 "rake_main_board_controller\stm32f4xx_hal_rcc_ex.o"
 "rake_main_board_controller\stm32f4xx_hal_flash.o"
@@ -18,7 +18,8 @@
 "rake_main_board_controller\stm32f4xx_hal_pwr_ex.o"
 "rake_main_board_controller\stm32f4xx_hal_cortex.o"
 "rake_main_board_controller\stm32f4xx_hal.o"
-"rake_main_board_controller\system_stm32f4xx.o"
+"rake_main_board_controller\stm32f4xx_hal_exti.o"
+"rake_main_board_controller\stm32f4xx_hal_uart.o"
 --library_type=microlib --strict --scatter "rake_main_board_controller\rake_main_board_controller.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
